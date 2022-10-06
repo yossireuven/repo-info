@@ -45,6 +45,10 @@ class RepoTagInfo:
         self._print_limit = print_limit
 
     def get_token(self):
+        """
+        Method to get Bearer token from docker-hub
+        :return: str: token
+        """
         # function constants
         _auth_url = f'{AUTH_URL}:{self.repo_name}:pull'
         # get token for given repository
@@ -56,6 +60,11 @@ class RepoTagInfo:
         exit(1)
 
     def get_and_print_tags(self):
+        """
+        Method to query repository tags and print them.
+        If repository not exists - program will quit
+        :return:
+        """
         # function constants
         headers = {"Authorization": f"Bearer {self.repo_token}"}
         _tags_url = f'{REG_V2_URL}{self.repo_name}{TAGS_V2_URI}'
@@ -71,6 +80,12 @@ class RepoTagInfo:
             exit(1)
 
     def get_and_print_manifests(self):
+        """
+        Method to query repository tags manifests and print them.
+        For each tag check if it have cosign signature in the repository (by comparing digest of the image),
+        Cosign signatures is of type "sha256-<DIGEST>.sig" where <DIGEST> is the sha256 of the correlated image.
+        :return:
+        """
         headers = {
             "Authorization": f"Bearer {self.repo_token}",
             "Accept": "application/vnd.docker.distribution.manifest.v2+json"
@@ -86,6 +101,12 @@ class RepoTagInfo:
             logging.info(f'Manifest for \"{self.repo_name}:{tag}\":\n{r_tag_manifest}')
 
     def is_signed_artifact(self, tag, r_tag_manifest):
+        """
+        check for given tag/artifact if it have cosign signature file in tag-list.
+        :param tag:
+        :param r_tag_manifest:
+        :return:
+        """
         if 'docker-content-digest' in r_tag_manifest['headers']:
             image_digest = r_tag_manifest['headers']['docker-content-digest'].strip('sha256:')
             image_digest = f'sha256-{image_digest}.sig'  # format as cosign signatures file format
@@ -95,6 +116,13 @@ class RepoTagInfo:
 
     @staticmethod
     def get_json_from_url(url, headers=None, with_res_headers=False):
+        """
+        python requests get method handler
+        :param url:
+        :param headers:
+        :param with_res_headers:
+        :return:
+        """
         try:
             response = requests.get(url, headers=headers)
             if response.status_code == requests.codes.OK:
